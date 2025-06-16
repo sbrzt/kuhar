@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KUHAR</title>
+</head>
+<body>
+  <h1>QR Code Generator</h1>
+  <form id="qr-form">
+    <input type="text" id="url" required />
+    <input type="color" id="fg" value="#000000" />
+    <input type="color" id="bg" value="#ffffff" />
+    <button type="submit">Generate QR</button>
+  </form>
+  <img id="qr-img" />
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
