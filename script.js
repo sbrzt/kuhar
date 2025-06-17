@@ -6,51 +6,65 @@ import micropip
 await micropip.install(["segno", "qrcode-artistic", "Pillow"])
 `);
 
-const pyCode = `
+await pyodide.runPythonAsync(`
 import segno, io, base64
-from js import document
-from pyodide.ffi import create_proxy
+from datetime import datetime
 
-def generate_qr(event):
-    event.preventDefault()
-    url = document.getElementById("url").value
-    if not url:
-        return
-    fg = document.getElementById("fg").value
-    bg = document.getElementById("bg").value
-
+def generate_qr_base64(url, fg, bg, image_bytes):
     qr = segno.make(url)
     buffer = io.BytesIO()
 
-    global_image_bytes = globals().get("image_bytes", None)
-
-    if global_image_bytes:
-        bg_file = io.BytesIO(global_image_bytes)
+    if image_bytes:
+        bg_file = io.BytesIO(image_bytes)
         qr.to_artistic(background=bg_file, target=buffer, scale=5, kind="png")
     else:
         qr.save(buffer, kind='png', scale=5, dark=fg, light=bg)
 
     buffer.seek(0)
-    b64 = base64.b64encode(buffer.read()).decode("ascii")
-    data_uri = "data:image/png;base64," + b64
-    document.getElementById("qr-img").src = data_uri
+    b64 = base64.b64encode(buffer.read()).decode('utf-8')
+    return b64
+`);
 
-document.getElementById("qr-form").addEventListener(
-    "submit", create_proxy(generate_qr)
-)
-`;
+const generateQR = pyodide.globals.get("generate_qr_base64");
 
-await pyodide.runPythonAsync(pyCode);
+let imageBytes = null;
 
 document.getElementById("bg-img").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) {
-      await pyodide.runPythonAsync("image_bytes = None");
-      return;
-    }
-  
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const pyBytes = pyodide.toPy(uint8Array);
-    await pyodide.globals.set("image_bytes", pyBytes);
+  const file = e.target.files[0];
+  if (!file) {
+    imageBytes = null;
+    return;
+  }
+  const arrayBuffer = await file.arrayBuffer();
+  imageBytes = new Uint8Array(arrayBuffer);
+});
+
+document.getElementById("qr-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const url = document.getElementById("url").value.trim();
+  const fg = document.getElementById("fg").value;
+  const bg = document.getElementById("bg").value;
+
+  if (!url) return;
+
+  let b64;
+  if (imageBytes) {
+    const pyBytes = pyodide.toPy(imageBytes);
+    b64 = generateQR(url, fg, bg, pyBytes);
+  } else {
+    b64 = generateQR(url, fg, bg, null);
+  }
+  const timestamp = new Date().toLocaleString();
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <img src="data:image/png;base64,${b64}" alt="QR Code" style="width:300px; height:auto;">
+    <p><strong>URL:</strong> ${url}</p>
+    <p><strong>Generated:</strong> ${timestamp}</p>
+    <a href="data:image/png;base64,${b64}" download="qr-code.png" class="button">Download PNG</a>
+  `;
+
+  document.getElementById("cards-container").appendChild(card);
 });
