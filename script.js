@@ -58,13 +58,23 @@ document.getElementById("qr-form").addEventListener("submit", async (e) => {
   const timestamp = new Date().toLocaleString();
 
   const card = document.createElement("div");
-  card.className = "card";
+  card.className = "card cell";
   card.innerHTML = `
-    <img src="data:image/png;base64,${b64}" alt="QR Code" style="width:300px; height:auto;">
-    <p><strong>URL:</strong> ${url}</p>
-    <p><strong>Generated:</strong> ${timestamp}</p>
-    <a href="data:image/png;base64,${b64}" download="qr-code.png" class="button">Download PNG</a>
-  `;
+  <div class="card-image">
+    <figure class="image is-4by3">
+      <img src="data:image/png;base64,${b64}" alt="QR Code" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
+    </figure>
+  </div>
+  <div class="card-content">
+    <div class="content">
+      <p><strong>URL:</strong> ${url}</p>
+      <p><strong>Generated:</strong> ${timestamp}</p>
+    </div>
+  </div>
+  <footer class="card-footer">
+    <a href="data:image/png;base64,${b64}" download="qr-code.png" class="card-footer-item">Download PNG</a>
+  </footer>
+`;
 
   document.getElementById("cards-container").appendChild(card);
 });
