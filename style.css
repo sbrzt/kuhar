@@ -8,3 +8,6 @@ html {
     text-align: center;
 }
 
+.image.is-4by3 img {
+    position: relative;
+}

@@ -37,6 +37,8 @@ document.getElementById("bg-img").addEventListener("change", async (e) => {
   }
   const arrayBuffer = await file.arrayBuffer();
   imageBytes = new Uint8Array(arrayBuffer);
+  const fileNameSpan = document.getElementById("file-name");
+  fileNameSpan.textContent = file.name;
 });
 
 document.getElementById("qr-form").addEventListener("submit", async (e) => {
@@ -62,12 +64,12 @@ document.getElementById("qr-form").addEventListener("submit", async (e) => {
   card.innerHTML = `
   <div class="card-image">
     <figure class="image is-4by3">
-      <img src="data:image/png;base64,${b64}" alt="QR Code" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
+      <img src="data:image/png;base64,${b64}" alt="QR Code" style="width: 100%; height: auto;"/>
     </figure>
   </div>
   <div class="card-content">
     <div class="content">
-      <p><strong>URL:</strong> ${url}</p>
+      <p><strong>URL:</strong> <a href="${url}">${url}</a></p>
       <p><strong>Generated:</strong> ${timestamp}</p>
     </div>
   </div>
