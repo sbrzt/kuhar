@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PORT=8000
+PORT=${1:-8000}
 
 echo "Starting local server at http://localhost:$PORT"
 python3 -m http.server "$PORT" &

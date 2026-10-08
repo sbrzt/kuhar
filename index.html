@@ -3,57 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KUHAR</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:">
+  <meta name="description" content="Free QR code generator that runs entirely in your browser. Links, Wi-Fi, contacts and email. Custom colours, shapes and images. PNG and SVG. No sign-up, no tracking.">
+  <meta name="theme-color" content="#d6452b">
+  <title>Kuhar · QR codes cooked in your browser</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1 class="title">KUHAR</h1>
+  <header class="top">
+    <img src="logo.svg" alt="" width="64" height="64">
+    <div>
+      <h1>Kuhar</h1>
+      <p>QR codes, cooked fresh in your browser. Free, no sign-up, nothing leaves your device.</p>
+    </div>
+  </header>
 
+  <main>
+    <form id="recipe" autocomplete="off">
+      <section class="card">
+        <h2>Ingredients</h2>
+        <div class="tabs" role="radiogroup" aria-label="Content type">
+          <label><input type="radio" name="kind" value="text" checked> Link / text</label>
+          <label><input type="radio" name="kind" value="wifi"> Wi-Fi</label>
+          <label><input type="radio" name="kind" value="contact"> Contact</label>
+          <label><input type="radio" name="kind" value="email"> Email</label>
+        </div>
 
-  <form id="qr-form">
-    <div class="field">
-        <label class="label">URL</label>
-        <div class="control">
-            <input class="input" type="text" placeholder="Text input" id="url" required>
+        <fieldset data-kind="text">
+          <label>Link or text
+            <textarea name="text" rows="3" placeholder="https://example.com" autofocus></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset data-kind="wifi" hidden>
+          <label>Network name (SSID) <input name="ssid"></label>
+          <label>Password <input name="pass"></label>
+          <label>Security
+            <select name="enc">
+              <option value="WPA">WPA / WPA2 / WPA3</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">None</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" name="hidden"> Hidden network</label>
+        </fieldset>
+
+        <fieldset data-kind="contact" hidden>
+          <label>Name <input name="name"></label>
+          <label>Organisation <input name="org"></label>
+          <label>Phone <input name="tel" type="tel"></label>
+          <label>Email <input name="mail" type="email"></label>
+          <label>Website <input name="url" type="url"></label>
+        </fieldset>
+
+        <fieldset data-kind="email" hidden>
+          <label>To <input name="to" type="email"></label>
+          <label>Subject <input name="subject"></label>
+          <label>Message <textarea name="body" rows="3"></textarea></label>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <h2>Seasoning</h2>
+        <div class="grid">
+          <label>Dark colour <input type="color" name="dark" value="#000000"></label>
+          <label>Light colour <input type="color" name="light" value="#ffffff"></label>
+          <label>Cut
+            <select name="shape">
+              <option value="square">Diced (squares)</option>
+              <option value="rounded">Rounded</option>
+              <option value="dots">Peppercorns (dots)</option>
+            </select>
+          </label>
+          <label>Doneness
+            <select name="ecc">
+              <option value="L">Rare · 7%</option>
+              <option value="M" selected>Medium · 15%</option>
+              <option value="Q">Medium-well · 25%</option>
+              <option value="H">Well done · 30%</option>
+            </select>
+          </label>
+          <label>Plate rim (margin) <input type="range" name="margin" min="0" max="8" value="4"></label>
+          <label>Portion (PNG size)
+            <select name="size">
+              <option value="256">256 px</option>
+              <option value="512">512 px</option>
+              <option value="1024" selected>1024 px</option>
+              <option value="2048">2048 px</option>
+            </select>
+          </label>
         </div>
-        <p class="help">This is a help text</p>
-    </div>
-    <div class="field">
-        <label class="label">Foreground Color</label>
-        <div class="control">
-            <input type="color" id="fg" value="#000000">
-        </div>
-        <p class="help">This is a help text</p>
-    </div>
-    <div class="field">
-        <label class="label">Background Color</label>
-        <div class="control">
-            <input type="color" id="bg" value="#ffffff">
-        </div>
-        <p class="help">This is a help text</p>
-    </div>
-    <div class="file has-name">
-        <label class="file-label">
-          <input class="file-input" type="file" id="bg-img" accept="image/*">
-          <span class="file-cta">
-            <span class="file-icon">
-              <i class="fas fa-upload"></i>
-            </span>
-            <span class="file-label">Choose a file…</span>
-          </span>
+        <label class="check"><input type="checkbox" name="clear"> Transparent background</label>
+        <label>Garnish (background image)
+          <input type="file" id="image" accept="image/*">
         </label>
-    </div>
-    <div class="field">
-        <div class="control">
-            <button class="button is-link" type="submit">Generate</button>
-        </div>
-    </div>
-  </form>
-  <div class="fixed-grid has-5-cols">
-    <div id="cards-container" class="grid">
-    </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+        <button type="button" id="noimage" class="quiet" hidden>Remove image</button>
+        <p class="hint">Doneness is error correction: the share of the code that can be damaged and still scan. More done means a denser code.</p>
+      </section>
+    </form>
+
+    <aside class="card serve">
+      <h2>Plate</h2>
+      <div id="plate" class="empty"></div>
+      <p id="note" role="status"></p>
+      <div class="actions">
+        <button type="button" id="png" class="main">Download PNG</button>
+        <button type="button" id="svg">Download SVG</button>
+        <button type="button" id="copy">Copy</button>
+        <button type="button" id="keep">Save recipe</button>
+      </div>
+    </aside>
+  </main>
+
+  <section id="shelf" class="card" hidden>
+    <h2>Recipe book <button type="button" id="clear" class="quiet">Empty the book</button></h2>
+    <ul id="book"></ul>
+  </section>
+
+  <noscript><p class="card">Kuhar needs JavaScript: the QR code is cooked on your device, not on a server.</p></noscript>
+
+  <footer>
+    <p>Open source under MIT · <a href="https://github.com/sbrzt/kuhar">Source</a> · Works offline once loaded.</p>
+  </footer>
+
+  <script src="vendor/qrcode.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 </html>
